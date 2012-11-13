@@ -14,6 +14,7 @@ public class BoardLogic {
 		mBoard.black = 0;
 		mBoard.black |= (mask << 28);
 		mBoard.black |= (mask << 35);
+		
 		mBoard.white = 0;
 		mBoard.white |= (mask << 27);
 		mBoard.white |= (mask << 36);
@@ -57,10 +58,10 @@ public class BoardLogic {
 	public int pos(Board b, int move) {
 		long mask = 1;
 
-		if((b.black & (mask << (move-1))) != 0) { // move-1
+		if((b.black & (mask << (move-1))) != 0) {
 			return (Constant.BLACK);
 		} else {
-			if((b.white & (mask << (move-1))) != 0) {  // move-1
+			if((b.white & (mask << (move-1))) != 0) {
 				return (Constant.WHITE);
 			} else {
 				return(Constant.EMPTY);
@@ -401,7 +402,7 @@ public class BoardLogic {
 		while(l2B(legal)) {
 			if(l2B(legal & mask)) {
 				b.legal_move.add(i);
-				Utils.log(TAG,"Add "+i+" to legal. Now we have "+b.legal_move.size());
+//				Utils.log(TAG,"Add "+i+" to legal. Now we have "+b.legal_move.size());
 				legal &= ~mask;
 			}
 			i++;
@@ -475,9 +476,11 @@ public class BoardLogic {
 			b.black &= ~flips;
 			b.color_to_move = Constant.BLACK;
 		}
+		Utils.log(TAG,"Flips: " + flips);
 
 		b.halfMove++;
 		b.pass = 0;
+		
 		return (b);
 	}
 

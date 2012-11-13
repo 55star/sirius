@@ -10,12 +10,10 @@ import android.widget.ImageView;
 public class BoardAdapter extends BaseAdapter {
 	final static String TAG = "BoardAdapter.java";
     private Context mContext;
-    private Board mBoard;
     private SiriusApp app;
 
     public BoardAdapter(Context c, Board b, SiriusApp a) {
         mContext = c;
-        mBoard = b;
         app = a;
     }
 
@@ -34,7 +32,7 @@ public class BoardAdapter extends BaseAdapter {
     // create a new ImageView for each item referenced by the Adapter                                                                                                                                                          
     public View getView(int pos, View convertView, ViewGroup parent) {
         ImageView imageView;
-        int position = pos + 1;
+        int position = pos;
 //        Utils.log(TAG, "Onclick: "+position);
         if (convertView == null) {  // if it's not recycled, initialize some attributes                                                                                                                                        
             imageView = new ImageView(mContext);
@@ -46,7 +44,7 @@ public class BoardAdapter extends BaseAdapter {
         }
 
 //        BoardLogic mBoardLogic = new BoardLogic();
-        switch(app.boardLogic.pos(app.board, position)) {
+        switch(app.boardLogic.pos(app.board, position + 1)) {
         case Constant.BLACK :
             imageView.setImageResource(R.drawable.brick_black);
             break;

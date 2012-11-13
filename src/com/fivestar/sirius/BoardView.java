@@ -36,13 +36,19 @@ public class BoardView extends Activity {
 			public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
 				int position = pos;
 				
-				Utils.log(TAG, "Position in: " + pos);
+				Utils.log(TAG, "Board click: " + pos);
 
 //				if(position != 63) {
 					position += 1;
 //				}
+				/*
+				1 -> 1  
+				9 -> 2   -7
+				17 -> 3  -14
+				3 -> 9   + 6 32A
 				
-				Utils.log(TAG, "Position: " + position);
+				*/
+				Utils.log(TAG, "Check legal/do move position: " + position);
 				
 				app.boardLogic.legal_moves(app.board, 0);
 				if(app.boardLogic.legal(app.board, position)) {
@@ -57,8 +63,8 @@ public class BoardView extends Activity {
 					mStatusText.setText("White's turn to play");
 				}
 				mStatText.setText("Black "+app.boardLogic.numbits(app.board.black)
-									+" - "+ app.boardLogic.numbits(app.board.white) + "White");
-				app.boardLogic.dumpToConsole(app.board);
+									+" - "+ app.boardLogic.numbits(app.board.white) + " White");
+//				app.boardLogic.dumpToConsole(app.board);
 			}
 		});
 	}
