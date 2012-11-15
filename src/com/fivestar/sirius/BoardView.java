@@ -16,6 +16,8 @@ public class BoardView extends Activity {
 	GridView mGridView;
 	BoardAdapter mBoardAdapter;
 	SiriusApp app;
+		
+	public static native void legalMoves(Board b, int bestmove);
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -49,8 +51,10 @@ public class BoardView extends Activity {
 				
 				*/
 				Utils.log(TAG, "Check legal/do move position: " + position);
+
 				
-				app.boardLogic.legal_moves(app.board, 0);
+//				app.boardLogic.legal_moves(app.board, 0);
+				BoardView.legalMoves(app.board,0);
 				if(app.boardLogic.legal(app.board, position)) {
 					app.boardLogic.do_move(app.board, position);
 					mBoardAdapter.notifyDataSetChanged();

@@ -14,95 +14,71 @@
  * limitations under the License.
  *
  */
-#include <jni.h>
+#include "com_fivestar_sirius_BoardView.h"
 
 #define BLACK 1
 #define WHITE 0
 #define EMPTY 2
-
 #define u64 unsigned long long
 
-
-jint
-Java_com_example_twolibs_TwoLibs_add( JNIEnv*  env,
-		jobject  this,
-		jint     x,
-		jint     y )
-
-{
-	return first(x, y);
-}
-
-void
-Java_com.fivestar_sirius_Sirius_do_move( JNIEnv* env, jobject this, jint black, jint white, jint move, jint color_to_move) {
+JNIEXPORT void JNICALL Java_com_fivestar_sirius_BoardView_legalMoves
+  (JNIEnv *, jclass, jobject, jint) {
+	int sortnum;
+	register unsigned int j;
+	register unsigned int i = 1;
+	short int *pnt;
 	u64 mask = 1;
-	u64 flips;
-	u64 board[2];
-	short int *to;
-	short int *from;
+	u64 legal;
 
-	board[WHITE]=white;
-	board[BLACK]=black;
-
-	mask = mask << (move-1);
 	if(b->color_to_move) {
-		flips = calculate_flips(board[BLACK], board[WHITE, mask);
-		board[BLACK] |= flips;
-		board[WHITE] &= ~flips;
-		/*		b->color_to_move = WHITE; */
-
-		/* save undo info */
-		ui->undo_pattern = flips;
-		ui->undo_color = BLACK;
-		*/
+		legal = calculate_legal(b->black,b->white);
 	} else {
-		flips = calculate_flips(board[WHITE], board[BLACK], mask);
-		board[WHITE] |= flips;
-		board[BLACK] &= ~flips;
-/*		b->color_to_move = BLACK; */
-
-		/* save undo info
-		ui->undo_pattern = flips;
-		ui->undo_color = WHITE;
-		*/
+		legal = calculate_legal(b->white,b->black);
 	}
 
-	/* save more undo info
-	ui->undo_x               = b->x;
-	ui->undo_y               = b->y;
-	ui->undo_mask            = mask;
-	ui->undo_num_legal_moves = b->num_legal_moves;
-	ui->pass                 = b->pass;
-	ui->game_over            = b->game_over;
-	*/
-
-	to   = (short int *) &(ui->undo_legal_move);
-	from = (short int *) &(b->legal_move);
-	while((*from) != -1) {
-		*to++ = *from++;
+	pnt = (short int *) &(b->legal_move);
+	while(legal) {
+		if(legal & mask) {
+			*pnt++ = i;
+			legal &= ~mask;
+		}
+		i++;
+		mask = mask << 1;
 	}
-	*to = -1;
+	*pnt = -1;
+	b->num_legal_moves = pnt - b->legal_move;
 
-	/*
-	for(i=0; i<ui->undo_num_legal_moves+1; i++) {
-		printf("%d\n", ui->undo_legal_move[i]);
+
+	/* sort the movelist */
+	/* put the best move first */
+	if(b->num_legal_moves > 1) {
+		if(bestmove != 0) {
+			sortnum = 0;
+			for(i = b->num_legal_moves; i--; ) {
+				if(b->legal_move[i] == bestmove) {
+					if(i > 0) {
+						int tmp = b->legal_move[0];
+						b->legal_move[0] = b->legal_move[i];
+						b->legal_move[i] = tmp;
+						sortnum = 1;
+					}
+					break;
+				}
+			}
+			if(b->half_move <= 30) {
+				for(i=59; i--; ) {
+					for(j=b->num_legal_moves; j--; ) {
+						if(b->legal_move[j] == move_priority[i]) {
+							int tmp = b->legal_move[sortnum];
+							b->legal_move[sortnum] = b->legal_move[j];
+							b->legal_move[j] = tmp;
+							sortnum++;
+							break;
+						}
+					}
+					if((sortnum == 3) || (b->num_legal_moves == sortnum)) break;
+				}
+			}
+		}
 	}
-	exit(1);
-	 */
-
-
-	/*
-	for(i=b->num_legal_moves; i--; ) {
-		ui->undo_legal_move[i] = b->legal_move[i];
-	}
-	 */
-
-	/* update the transposition table indexes */
-	/*
-	b = transposition_hash(b);
-
-	b->half_move++;
-	b->pass = 0;
-*/
-	return (board);
 }
