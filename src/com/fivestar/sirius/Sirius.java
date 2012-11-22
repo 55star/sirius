@@ -8,6 +8,11 @@ public class Sirius extends Activity {
 	final static String TAG = "Sirius.java";
 	SiriusApp app;
 
+	static {
+		System.loadLibrary("board");
+	}
+
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

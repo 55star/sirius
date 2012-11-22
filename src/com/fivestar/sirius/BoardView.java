@@ -11,13 +11,16 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class BoardView extends Activity {
-
+	
 	final static String TAG = "BoardView.java";
 	GridView mGridView;
 	BoardAdapter mBoardAdapter;
 	SiriusApp app;
-		
-	public static native void legalMoves(Board b, int bestmove);
+	
+	static {
+		System.loadLibrary("board");
+	}
+	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -54,14 +57,14 @@ public class BoardView extends Activity {
 
 				
 //				app.boardLogic.legal_moves(app.board, 0);
-				BoardView.legalMoves(app.board,0);
+				app.boardLogic.legalMoves(app.board,0);
 				if(app.boardLogic.legal(app.board, position)) {
-					app.boardLogic.do_move(app.board, position);
+					app.boardLogic.doMove(app.board, position);
 					mBoardAdapter.notifyDataSetChanged();
 				} else {
 					Utils.log(TAG, "not a legal move!");
 				}
-				if (app.board.color_to_move == Constant.BLACK) {
+				if (app.board.colorToMove == Constant.BLACK) {
 					mStatusText.setText("Black's turn to play");
 				} else {
 					mStatusText.setText("White's turn to play");

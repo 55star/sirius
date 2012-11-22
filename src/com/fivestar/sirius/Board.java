@@ -6,8 +6,8 @@ import java.util.ArrayList;
 public class Board {
 	public long black;
 	public long white;
-	public int color_to_move;
-	public ArrayList<Integer> legal_move;
+	public int colorToMove;
+	public ArrayList<Integer> legalMove;
 
 	public int halfMove;
 	public int pass;
@@ -15,8 +15,8 @@ public class Board {
 
 	public Board() {
 		// Black always start 
-		color_to_move = Constant.BLACK;
-		legal_move = new ArrayList<Integer>(10);
+		colorToMove = Constant.BLACK;
+		legalMove = new ArrayList<Integer>(10);
 	}
 
 	public long rotate_bit_pattern(long orig) {

@@ -1,8 +1,7 @@
-/Users/ohman/Workspace/Sirius/Sirius/obj/local/armeabi/objs/board/board.o: \
- /Users/ohman/Workspace/Sirius/Sirius/jni/board.c \
- /Users/ohman/Workspace/Sirius/Sirius/jni/com_fivestar_sirius_BoardView.h \
+obj/local/armeabi/objs/board/board.o: jni/board.c \
+ jni/com_fivestar_sirius_BoardLogic.h \
  /Users/ohman/Workspace/NDK/android-ndk-r8b/platforms/android-14/arch-arm/usr/include/jni.h
 
-/Users/ohman/Workspace/Sirius/Sirius/jni/com_fivestar_sirius_BoardView.h:
+jni/com_fivestar_sirius_BoardLogic.h:
 
 /Users/ohman/Workspace/NDK/android-ndk-r8b/platforms/android-14/arch-arm/usr/include/jni.h:
