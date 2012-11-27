@@ -9,19 +9,11 @@ extern "C" {
 #endif
 /*
  * Class:     com_fivestar_sirius_BoardLogic
- * Method:    calculateLegal
- * Signature: (JJ)J
+ * Method:    doMove
+ * Signature: (I)V
  */
-JNIEXPORT jlong JNICALL Java_com_fivestar_sirius_BoardLogic_calculateLegal
-  (JNIEnv *, jclass, jlong, jlong);
-
-/*
- * Class:     com_fivestar_sirius_BoardLogic
- * Method:    calculateFlips
- * Signature: (JJJ)J
- */
-JNIEXPORT jlong JNICALL Java_com_fivestar_sirius_BoardLogic_calculateFlips
-  (JNIEnv *, jclass, jlong, jlong, jlong);
+JNIEXPORT void JNICALL Java_com_fivestar_sirius_BoardLogic_doMove
+  (JNIEnv *, jclass, jint);
 
 #ifdef __cplusplus
 }

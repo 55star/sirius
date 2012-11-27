@@ -6,10 +6,6 @@ public class BoardLogic {
 
 	public BoardLogic() {}
 
-	public static native long calculateLegal(long me, long you);
-	public static native long calculateFlips(long me, long you, long mask);
-
-
 	final static int[] movePriority = {
 		55,50,15,10,
 		16,56,63,58,49,9,7,2,
@@ -175,6 +171,7 @@ public class BoardLogic {
 	 * do_move:
 	 * Make a move.
 	 */
+/*
 	public Board doMove(Board b, int move) {
 		long mask = 1;
 		long flips;
@@ -198,7 +195,7 @@ public class BoardLogic {
 
 		return (b);
 	}
-
+*/
 	public Board do_pass(Board b) {
 
 		if(b.colorToMove == Constant.BLACK) {
@@ -220,5 +217,72 @@ public class BoardLogic {
 			}
 		}
 		return false;
+	}
+
+	public long calculateLegal(long me, long you) {
+		long free  = ~(me | you);
+		long value;
+
+		value = (free &
+				((Constant.N1  & (you << 8) & (me << 16))  |
+						(Constant.NW1 & (you << 9) & (me << 18))  |
+						(Constant.W1  & (you << 1) & (me << 2))   |
+						(Constant.SW1 & (you >> 7) & (me >> 14))  |
+						(Constant.S1  & (you >> 8) & (me >> 16))  |
+						(Constant.SE1 & (you >> 9) & (me >> 18))  |
+						(Constant.E1  & (you >> 1) & (me >> 2))   |
+						(Constant.NE1 & (you << 7) & (me << 14))));
+
+		value |= (free &
+				((Constant.N2   & (you << 8) & (you << 16) & (me << 24))  |
+						(Constant.NW2  & (you << 9) & (you << 18) & (me << 27))  |
+						(Constant.W2   & (you << 1) & (you << 2)  & (me << 3))   |
+						(Constant.SW2  & (you >> 7) & (you >> 14) & (me >> 21))  |
+						(Constant.S2   & (you >> 8) & (you >> 16) & (me >> 24))  |
+						(Constant.SE2  & (you >> 9) & (you >> 18) & (me >> 27))  |
+						(Constant.E2   & (you >> 1) & (you >> 2)  & (me >> 3))   |
+						(Constant.NE2  & (you << 7) & (you << 14) & (me << 21))));
+
+		value |= (free &
+				((Constant.N3   & (you << 8) & (you << 16) & (you << 24) & (me << 32))  |
+						(Constant.NW3  & (you << 9) & (you << 18) & (you << 27) & (me << 36))  |
+						(Constant.W3   & (you << 1) & (you << 2)  & (you << 3)  & (me << 4))   |
+						(Constant.SW3  & (you >> 7) & (you >> 14) & (you >> 21) & (me >> 28))  |
+						(Constant.S3   & (you >> 8) & (you >> 16) & (you >> 24) & (me >> 32))  |
+						(Constant.SE3  & (you >> 9) & (you >> 18) & (you >> 27) & (me >> 36))  |
+						(Constant.E3   & (you >> 1) & (you >> 2)  & (you >> 3)  & (me >> 4))   |
+						(Constant.NE3  & (you << 7) & (you << 14) & (you << 21) & (me << 28))));
+
+		value |= (free &
+				((Constant.N4   & (you << 8) & (you << 16) & (you << 24) & (you << 32) & (me << 40))  |
+						(Constant.NW4  & (you << 9) & (you << 18) & (you << 27) & (you << 36) & (me << 45))  |
+						(Constant.W4   & (you << 1) & (you << 2)  & (you << 3)  & (you << 4)  & (me << 5))   |
+						(Constant.SW4  & (you >> 7) & (you >> 14) & (you >> 21) & (you >> 28) & (me >> 35))  |
+						(Constant.S4   & (you >> 8) & (you >> 16) & (you >> 24) & (you >> 32) & (me >> 40))  |
+						(Constant.SE4  & (you >> 9) & (you >> 18) & (you >> 27) & (you >> 36) & (me >> 45))  |
+						(Constant.E4   & (you >> 1) & (you >> 2)  & (you >> 3)  & (you >> 4)  & (me >> 5))   |
+						(Constant.NE4  & (you << 7) & (you << 14) & (you << 21) & (you << 28) & (me << 35))));
+
+		value |= (free &
+				((Constant.N5   & (you << 8) & (you << 16) & (you << 24) & (you << 32) & (you << 40) & (me << 48))  |
+						(Constant.NW5  & (you << 9) & (you << 18) & (you << 27) & (you << 36) & (you << 45) & (me << 54))  |
+						(Constant.W5   & (you << 1) & (you << 2)  & (you << 3)  & (you << 4)  & (you << 5)  & (me << 6))   |
+						(Constant.SW5  & (you >> 7) & (you >> 14) & (you >> 21) & (you >> 28) & (you >> 35) & (me >> 42))  |
+						(Constant.S5   & (you >> 8) & (you >> 16) & (you >> 24) & (you >> 32) & (you >> 40) & (me >> 48))  |
+						(Constant.SE5  & (you >> 9) & (you >> 18) & (you >> 27) & (you >> 36) & (you >> 45) & (me >> 54))  |
+						(Constant.E5   & (you >> 1) & (you >> 2)  & (you >> 3)  & (you >> 4)  & (you >> 5)  & (me >> 6))   |
+						(Constant.NE5  & (you << 7) & (you << 14) & (you << 21) & (you << 28) & (you << 35) & (me << 42))));
+
+		value |= (free &
+				((Constant.N6   & (you << 8) & (you << 16) & (you << 24) & (you << 32) & (you << 40) & (you << 48) & (me << 56))  |
+						(Constant.NW6  & (you << 9) & (you << 18) & (you << 27) & (you << 36) & (you << 45) & (you << 54) & (me << 63))  |
+						(Constant.W6   & (you << 1) & (you << 2)  & (you << 3)  & (you << 4)  & (you << 5)  & (you << 6)  & (me << 7))   |
+						(Constant.SW6  & (you >> 7) & (you >> 14) & (you >> 21) & (you >> 28) & (you >> 35) & (you >> 42) & (me >> 49))  |
+						(Constant.S6   & (you >> 8) & (you >> 16) & (you >> 24) & (you >> 32) & (you >> 40) & (you >> 48) & (me >> 56))  |
+						(Constant.SE6  & (you >> 9) & (you >> 18) & (you >> 27) & (you >> 36) & (you >> 45) & (you >> 54) & (me >> 63))  |
+						(Constant.E6   & (you >> 1) & (you >> 2)  & (you >> 3)  & (you >> 4)  & (you >> 5)  & (you >> 6)  & (me >> 7))   |
+						(Constant.NE6  & (you << 7) & (you << 14) & (you << 21) & (you << 28) & (you << 35) & (you << 42) & (me << 49))));
+
+		return (value);
 	}
 }	

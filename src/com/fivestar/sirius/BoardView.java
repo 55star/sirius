@@ -12,15 +12,13 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class BoardView extends Activity {
 	
+//	public static native void doMove(int move);
+	
 	final static String TAG = "BoardView.java";
 	GridView mGridView;
 	BoardAdapter mBoardAdapter;
 	SiriusApp app;
-	
-	static {
-		System.loadLibrary("board");
-	}
-	
+		
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -59,7 +57,7 @@ public class BoardView extends Activity {
 //				app.boardLogic.legal_moves(app.board, 0);
 				app.boardLogic.legalMoves(app.board,0);
 				if(app.boardLogic.legal(app.board, position)) {
-					app.boardLogic.doMove(app.board, position);
+					app.board.doMove(position);
 					mBoardAdapter.notifyDataSetChanged();
 				} else {
 					Utils.log(TAG, "not a legal move!");

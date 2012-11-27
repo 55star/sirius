@@ -15,7 +15,8 @@
  *
  */
 
-#include "com_fivestar_sirius_BoardLogic.h"
+#include "com_fivestar_sirius_Board.h"
+
 
 #define BLACK 1
 #define WHITE 0
@@ -78,38 +79,67 @@
 #define NW5 0xC0C0000000000000
 #define NW6 0x8000000000000000
 
-	/**
-	 * do_move:
-	 * Make a move.
-	 */
-JNIEXPORT jlong JNICALL Java_com_fivestar_sirius_BoardLogic_calculateLegal(JNIEnv *env, jclass this, jlong me, jlong you){
 
-	public Board doMove(Board b, int move) {
-		long mask = 1;
-		long flips;
+static u64 calculate_flips(u64 m, u64 y, u64 mask);
 
-		mask = mask << (move-1);
-		if(b.colorToMove == Constant.BLACK) {
-			flips = calculateFlips(b.black, b.white, mask);
-			b.black |= flips;
-			b.white &= ~flips;
-			b.colorToMove = Constant.WHITE;
-		} else {
-			flips = calculateFlips(b.white, b.black, mask);
-			b.white |= flips;
-			b.black &= ~flips;
-			b.colorToMove = Constant.BLACK;
-		}
-		Utils.log(TAG,"Flips: " + flips);
 
-		b.halfMove++;
-		b.pass = 0;
+JNIEXPORT void JNICALL Java_com_fivestar_sirius_BoardLogic_doMove(JNIEnv *env, jclass this, jint move){
 
-		return (b);
+	// Get a reference to this object's class
+
+	jclass thisClass = (*env)->GetObjectClass(env, this);
+
+	jfieldID fidColorToMove = (*env)->GetFieldID(env, thisClass, "colorToMove", "I");
+	jint colorToMove = (*env)->GetIntField(env, this, fidColorToMove);
+
+	jfieldID fidBlack = (*env)->GetFieldID(env, thisClass, "black", "L");
+	jlong black = (*env)->GetIntField(env, this, fidBlack);
+
+	jfieldID fidWhite = (*env)->GetFieldID(env, thisClass, "black", "L");
+	jlong white = (*env)->GetIntField(env, this, fidWhite);
+
+	jfieldID fidHalfMove = (*env)->GetFieldID(env, thisClass, "halfMove", "I");
+	jint halfMove = (*env)->GetIntField(env, this, fidHalfMove);
+
+	jfieldID fidPass = (*env)->GetFieldID(env, thisClass, "pass", "I");
+	jint pass = (*env)->GetIntField(env, this, fidPass);
+
+
+	// Change the variable
+	//	      number = 99;
+	//      (*env)->SetIntField(env, this, fidNumber, number);
+
+
+	long mask = 1;
+	long flips;
+
+	mask = mask << (move-1);
+	if(colorToMove == BLACK) {
+		flips = calculate_flips(black, white, mask);
+		black |= flips;
+		white &= ~flips;
+		colorToMove = WHITE;
+	} else {
+		flips = calculate_flips(white, black, mask);
+		white |= flips;
+		black &= ~flips;
+		colorToMove = BLACK;
 	}
+	halfMove++;
+	pass = 0;
 
+	(*env)->SetLongField(env, this, fidWhite, white);
+	(*env)->SetLongField(env, this, fidBlack, black);
+	(*env)->SetIntField(env, this, fidColorToMove, colorToMove);
+	(*env)->SetIntField(env, this, fidHalfMove, halfMove);
+	(*env)->SetIntField(env, this, fidPass, pass);
+}
 
-JNIEXPORT jlong JNICALL Java_com_fivestar_sirius_BoardLogic_calculateLegal(JNIEnv *env, jclass this, jlong me, jlong you){
+/*
+static u64 calculate_legal(u64 m, u64 y) {
+
+	u64 me = (u64) m;
+	u64 you = (u64) y;
 
 	u64 free;
 	u64 value;
@@ -178,236 +208,238 @@ JNIEXPORT jlong JNICALL Java_com_fivestar_sirius_BoardLogic_calculateLegal(JNIEn
 
 	return (value);
 }
+ */
 
+static u64 calculate_flips(u64 m, u64 y, u64 mask) {
 
-JNIEXPORT jlong JNICALL Java_com_fivestar_sirius_BoardLogic_calculateFlips(JNIEnv *env, jclass this, jlong me, jlong you, jlong mask) {
-/*	static u64 calculate_flips(u64 me, u64 you, u64 mask) { */
-		u64 tmp;
-		register u64 value = mask;
+	u64 me = (u64) m;
+	u64 you = (u64) y;
+	u64 tmp;
+	register u64 value = mask;
 
-		/* SOUTH */
-		tmp = ((mask << 8) & you);
-		if(tmp) {
-			if((mask & S1) && ((mask << 16) & me)) {
-				value |= (mask << 8);
-			} else if((mask & S2) &&
-					((mask << 16) & you) && ((mask << 24) & me)) {
-				value |= ((mask << 8) | (mask << 16));
-			} else if((mask & S3) &&
-					((mask << 16) & you) && ((mask << 24) & you) &&
-					((mask << 32) & me)) {
-				value |= ((mask << 8) | (mask << 16) | (mask << 24));
-			} else if((mask & S4) &&
-					((mask << 16) & you) && ((mask << 24) & you) &&
-					((mask << 32) & you) && ((mask << 40) & me)) {
-				value |= ((mask << 8) | (mask << 16) | (mask << 24) | (mask << 32));
-			} else if((mask & S5) &&
-					((mask << 16) & you) && ((mask << 24) & you) &&
-					((mask << 32) & you) && ((mask << 40) & you) &&
-					((mask << 48) & me)) {
-				value |= ((mask << 8) | (mask << 16) | (mask << 24) | (mask << 32) | (mask << 40));
-			} else if((mask & S6) &&
-					((mask << 16) & you) && ((mask << 24) & you) &&
-					((mask << 32) & you) && ((mask << 40) & you) &&
-					((mask << 48) & you) && ((mask << 56) & me)) {
-				value |= ((mask << 8) | (mask << 16) | (mask << 24) | (mask << 32) | (mask << 40) | (mask << 48));
-			}
+	/* SOUTH */
+	tmp = ((mask << 8) & you);
+	if(tmp) {
+		if((mask & S1) && ((mask << 16) & me)) {
+			value |= (mask << 8);
+		} else if((mask & S2) &&
+				((mask << 16) & you) && ((mask << 24) & me)) {
+			value |= ((mask << 8) | (mask << 16));
+		} else if((mask & S3) &&
+				((mask << 16) & you) && ((mask << 24) & you) &&
+				((mask << 32) & me)) {
+			value |= ((mask << 8) | (mask << 16) | (mask << 24));
+		} else if((mask & S4) &&
+				((mask << 16) & you) && ((mask << 24) & you) &&
+				((mask << 32) & you) && ((mask << 40) & me)) {
+			value |= ((mask << 8) | (mask << 16) | (mask << 24) | (mask << 32));
+		} else if((mask & S5) &&
+				((mask << 16) & you) && ((mask << 24) & you) &&
+				((mask << 32) & you) && ((mask << 40) & you) &&
+				((mask << 48) & me)) {
+			value |= ((mask << 8) | (mask << 16) | (mask << 24) | (mask << 32) | (mask << 40));
+		} else if((mask & S6) &&
+				((mask << 16) & you) && ((mask << 24) & you) &&
+				((mask << 32) & you) && ((mask << 40) & you) &&
+				((mask << 48) & you) && ((mask << 56) & me)) {
+			value |= ((mask << 8) | (mask << 16) | (mask << 24) | (mask << 32) | (mask << 40) | (mask << 48));
 		}
-		/* SOUTHEAST */
-		tmp = ((mask << 9) & you);
-		if(tmp) {
-			if((mask & SE1) && ((mask << 18) & me)) {
-				value |= (mask << 9);
-			} else if((mask & SE2) &&
-					((mask << 18) & you) && ((mask << 27) & me)) {
-				value |= ((mask << 9) | (mask << 18));
-			} else if((mask & SE3) &&
-					((mask << 18) & you) && ((mask << 27) & you) &&
-					((mask << 36) & me)) {
-				value |= ((mask << 9) | (mask << 18) | (mask << 27));
-			} else if((mask & SE4) &&
-					((mask << 18) & you) && ((mask << 27) & you) &&
-					((mask << 36) & you) && ((mask << 45) & me)) {
-				value |= ((mask << 9) | (mask << 18) | (mask << 27) | (mask << 36));
-			} else if((mask & SE5) &&
-					((mask << 18) & you) && ((mask << 27) & you) &&
-					((mask << 36) & you) && ((mask << 45) & you) &&
-					((mask << 54) & me)) {
-				value |= ((mask << 9) | (mask << 18) | (mask << 27) | (mask << 36) | (mask << 45));
-			} else if((mask & SE6) &&
-					((mask << 18) & you) && ((mask << 27) & you) &&
-					((mask << 36) & you) && ((mask << 45) & you) &&
-					((mask << 54) & you) && ((mask << 63) & me)) {
-				value |= ((mask << 9) | (mask << 18) | (mask << 27) | (mask << 36) | (mask << 45) | (mask << 54));
-			}
-		}
-		/* EAST */
-		tmp = ((mask << 1) & you);
-		if(tmp) {
-			if((mask & E1) && ((mask << 2) & me)) {
-				value |= (mask << 1);
-			} else if((mask & E2) &&
-					((mask << 2) & you) && ((mask << 3) & me)) {
-				value |= ((mask << 1) | (mask << 2));
-			} else if((mask & E3) &&
-					((mask << 2) & you) && ((mask << 3) & you) &&
-					((mask << 4) & me)) {
-				value |= ((mask << 1) | (mask << 2) | (mask << 3));
-			} else if((mask & E4) &&
-					((mask << 2) & you) && ((mask << 3) & you) &&
-					((mask << 4) & you) && ((mask << 5) & me)) {
-				value |= ((mask << 1) | (mask << 2) | (mask << 3) | (mask << 4));
-			} else if((mask & E5) &&
-					((mask << 2) & you) && ((mask << 3) & you) &&
-					((mask << 4) & you) && ((mask << 5) & you) &&
-					((mask << 6) & me)) {
-				value |= ((mask << 1) | (mask << 2) | (mask << 3) | (mask << 4) | (mask << 5));
-			} else if((mask & E6) &&
-					((mask << 2) & you) && ((mask << 3) & you) &&
-					((mask << 4) & you) && ((mask << 5) & you) &&
-					((mask << 6) & you) && ((mask << 7) & me)) {
-				value |= ((mask << 1) | (mask << 2) | (mask << 3) | (mask << 4) | (mask << 5) | (mask << 6));
-			}
-		}
-		/* SOUTHWEST */
-		tmp = ((mask << 7) & you);
-		if(tmp) {
-			if((mask & SW1) && ((mask << 14) & me)) {
-				value |= (mask << 7);
-			} else if((mask & SW2) &&
-					((mask << 14) & you) && ((mask << 21) & me)) {
-				value |= ((mask << 7) | (mask << 14));
-			} else if((mask & SW3) &&
-					((mask << 14) & you) && ((mask << 21) & you) &&
-					((mask << 28) & me)) {
-				value |= ((mask << 7) | (mask << 14) | (mask << 21));
-			} else if((mask & SW4) &&
-					((mask << 14) & you) && ((mask << 21) & you) &&
-					((mask << 28) & you) && ((mask << 35) & me)) {
-				value |= ((mask << 7) | (mask << 14) | (mask << 21) | (mask << 28));
-			} else if((mask & SW5) &&
-					((mask << 14) & you) && ((mask << 21) & you) &&
-					((mask << 28) & you) && ((mask << 35) & you) &&
-					((mask << 42) & me)) {
-				value |= ((mask << 7) | (mask << 14) | (mask << 21) | (mask << 28) | (mask << 35));
-			} else if((mask & SW6) &&
-					((mask << 14) & you) && ((mask << 21) & you) &&
-					((mask << 28) & you) && ((mask << 35) & you) &&
-					((mask << 42) & you) && ((mask << 49) & me)) {
-				value |= ((mask << 7) | (mask << 14) | (mask << 21) | (mask << 28) | (mask << 35) | (mask << 42));
-			}
-		}
-		/* NORTH */
-		tmp = ((mask >> 8) & you);
-		if(tmp) {
-			if((mask & N1) && ((mask >> 16) & me)) {
-				value |= (mask >> 8);
-			} else if((mask & N2) &&
-					((mask >> 16) & you) && ((mask >> 24) & me)) {
-				value |= ((mask >> 8) | (mask >> 16));
-			} else if((mask & N3) &&
-					((mask >> 16) & you) && ((mask >> 24) & you) &&
-					((mask >> 32) & me)) {
-				value |= ((mask >> 8) | (mask >> 16) | (mask >> 24));
-			} else if((mask & N4) &&
-					((mask >> 16) & you) && ((mask >> 24) & you) &&
-					((mask >> 32) & you) && ((mask >> 40) & me)) {
-				value |= ((mask >> 8) | (mask >> 16) | (mask >> 24) | (mask >> 32));
-			} else if((mask & N5) &&
-					((mask >> 16) & you) && ((mask >> 24) & you) &&
-					((mask >> 32) & you) && ((mask >> 40) & you) &&
-					((mask >> 48) & me)) {
-				value |= ((mask >> 8) | (mask >> 16) | (mask >> 24) | (mask >> 32) | (mask >> 40));
-			} else if((mask & N6) &&
-					((mask >> 16) & you) && ((mask >> 24) & you) &&
-					((mask >> 32) & you) && ((mask >> 40) & you) &&
-					((mask >> 48) & you) && ((mask >> 56) & me)) {
-				value |= ((mask >> 8) | (mask >> 16) | (mask >> 24) | (mask >> 32) | (mask >> 40) | (mask >> 48));
-			}
-		}
-		/* NORTHWEST */
-		tmp = ((mask >> 9) & you);
-		if(tmp) {
-			if((mask & NW1) && ((mask >> 18) & me)) {
-				value |= (mask >> 9);
-			} else if((mask & NW2) &&
-					((mask >> 18) & you) && ((mask >> 27) & me)) {
-				value |= ((mask >> 9) | (mask >> 18));
-			} else if((mask & NW3) &&
-					((mask >> 18) & you) && ((mask >> 27) & you) &&
-					((mask >> 36) & me)) {
-				value |= ((mask >> 9) | (mask >> 18) | (mask >> 27));
-			} else if((mask & NW4) &&
-					((mask >> 18) & you) && ((mask >> 27) & you) &&
-					((mask >> 36) & you) && ((mask >> 45) & me)) {
-				value |= ((mask >> 9) | (mask >> 18) | (mask >> 27) | (mask >> 36));
-			} else if((mask & NW5) &&
-					((mask >> 18) & you) && ((mask >> 27) & you) &&
-					((mask >> 36) & you) && ((mask >> 45) & you) &&
-					((mask >> 54) & me)) {
-				value |= ((mask >> 9) | (mask >> 18) | (mask >> 27) | (mask >> 36) | (mask >> 45));
-			} else if((mask & NW6) &&
-					((mask >> 18) & you) && ((mask >> 27) & you) &&
-					((mask >> 36) & you) && ((mask >> 45) & you) &&
-					((mask >> 54) & you) && ((mask >> 63) & me)) {
-				value |= ((mask >> 9) | (mask >> 18) | (mask >> 27) | (mask >> 36) | (mask >> 45) | (mask >> 54));
-			}
-		}
-		/* WEST */
-		tmp = ((mask >> 1) & you);
-		if(tmp) {
-			if((mask & W1) && ((mask >> 2) & me)) {
-				value |= (mask >> 1);
-			} else if((mask & W2) &&
-					((mask >> 2) & you) && ((mask >> 3) & me)) {
-				value |= ((mask >> 1) | (mask >> 2));
-			} else if((mask & W3) &&
-					((mask >> 2) & you) && ((mask >> 3) & you) &&
-					((mask >> 4) & me)) {
-				value |= ((mask >> 1) | (mask >> 2) | (mask >> 3));
-			} else if((mask & W4) &&
-					((mask >> 2) & you) && ((mask >> 3) & you) &&
-					((mask >> 4) & you) && ((mask >> 5) & me)) {
-				value |= ((mask >> 1) | (mask >> 2) | (mask >> 3) | (mask >> 4));
-			} else if((mask & W5) &&
-					((mask >> 2) & you) && ((mask >> 3) & you) &&
-					((mask >> 4) & you) && ((mask >> 5) & you) &&
-					((mask >> 6) & me)) {
-				value |= ((mask >> 1) | (mask >> 2) | (mask >> 3) | (mask >> 4) | (mask >> 5));
-			} else if((mask & W6) &&
-					((mask >> 2) & you) && ((mask >> 3) & you) &&
-					((mask >> 4) & you) && ((mask >> 5) & you) &&
-					((mask >> 6) & you) && ((mask >> 7) & me)) {
-				value |= ((mask >> 1) | (mask >> 2) | (mask >> 3) | (mask >> 4) | (mask >> 5) | (mask >> 6));
-			}
-		}
-		/* NORTHEAST */
-		tmp = ((mask >> 7) & you);
-		if(tmp) {
-			if((mask & NE1) && ((mask >> 14) & me)) {
-				value |= (mask >> 7);
-			} else if((mask & NE2) &&
-					((mask >> 14) & you) && ((mask >> 21) & me)) {
-				value |= ((mask >> 7) | (mask >> 14));
-			} else if((mask & NE3) &&
-					((mask >> 14) & you) && ((mask >> 21) & you) &&
-					((mask >> 28) & me)) {
-				value |= ((mask >> 7) | (mask >> 14) | (mask >> 21));
-			} else if((mask & NE4) &&
-					((mask >> 14) & you) && ((mask >> 21) & you) &&
-					((mask >> 28) & you) && ((mask >> 35) & me)) {
-				value |= ((mask >> 7) | (mask >> 14) | (mask >> 21) | (mask >> 28));
-			} else if((mask & NE5) &&
-					((mask >> 14) & you) && ((mask >> 21) & you) &&
-					((mask >> 28) & you) && ((mask >> 35) & you) &&
-					((mask >> 42) & me)) {
-				value |= ((mask >> 7) | (mask >> 14) | (mask >> 21) | (mask >> 28) | (mask >> 35));
-			} else if((mask & NE6) &&
-					((mask >> 14) & you) && ((mask >> 21) & you) &&
-					((mask >> 28) & you) && ((mask >> 35) & you) &&
-					((mask >> 42) & you) && ((mask >> 49) & me)) {
-				value |= ((mask >> 7) | (mask >> 14) | (mask >> 21) | (mask >> 28) | (mask >> 35) | (mask >> 42));
-			}
-		}
-		return (value);
 	}
+	/* SOUTHEAST */
+	tmp = ((mask << 9) & you);
+	if(tmp) {
+		if((mask & SE1) && ((mask << 18) & me)) {
+			value |= (mask << 9);
+		} else if((mask & SE2) &&
+				((mask << 18) & you) && ((mask << 27) & me)) {
+			value |= ((mask << 9) | (mask << 18));
+		} else if((mask & SE3) &&
+				((mask << 18) & you) && ((mask << 27) & you) &&
+				((mask << 36) & me)) {
+			value |= ((mask << 9) | (mask << 18) | (mask << 27));
+		} else if((mask & SE4) &&
+				((mask << 18) & you) && ((mask << 27) & you) &&
+				((mask << 36) & you) && ((mask << 45) & me)) {
+			value |= ((mask << 9) | (mask << 18) | (mask << 27) | (mask << 36));
+		} else if((mask & SE5) &&
+				((mask << 18) & you) && ((mask << 27) & you) &&
+				((mask << 36) & you) && ((mask << 45) & you) &&
+				((mask << 54) & me)) {
+			value |= ((mask << 9) | (mask << 18) | (mask << 27) | (mask << 36) | (mask << 45));
+		} else if((mask & SE6) &&
+				((mask << 18) & you) && ((mask << 27) & you) &&
+				((mask << 36) & you) && ((mask << 45) & you) &&
+				((mask << 54) & you) && ((mask << 63) & me)) {
+			value |= ((mask << 9) | (mask << 18) | (mask << 27) | (mask << 36) | (mask << 45) | (mask << 54));
+		}
+	}
+	/* EAST */
+	tmp = ((mask << 1) & you);
+	if(tmp) {
+		if((mask & E1) && ((mask << 2) & me)) {
+			value |= (mask << 1);
+		} else if((mask & E2) &&
+				((mask << 2) & you) && ((mask << 3) & me)) {
+			value |= ((mask << 1) | (mask << 2));
+		} else if((mask & E3) &&
+				((mask << 2) & you) && ((mask << 3) & you) &&
+				((mask << 4) & me)) {
+			value |= ((mask << 1) | (mask << 2) | (mask << 3));
+		} else if((mask & E4) &&
+				((mask << 2) & you) && ((mask << 3) & you) &&
+				((mask << 4) & you) && ((mask << 5) & me)) {
+			value |= ((mask << 1) | (mask << 2) | (mask << 3) | (mask << 4));
+		} else if((mask & E5) &&
+				((mask << 2) & you) && ((mask << 3) & you) &&
+				((mask << 4) & you) && ((mask << 5) & you) &&
+				((mask << 6) & me)) {
+			value |= ((mask << 1) | (mask << 2) | (mask << 3) | (mask << 4) | (mask << 5));
+		} else if((mask & E6) &&
+				((mask << 2) & you) && ((mask << 3) & you) &&
+				((mask << 4) & you) && ((mask << 5) & you) &&
+				((mask << 6) & you) && ((mask << 7) & me)) {
+			value |= ((mask << 1) | (mask << 2) | (mask << 3) | (mask << 4) | (mask << 5) | (mask << 6));
+		}
+	}
+	/* SOUTHWEST */
+	tmp = ((mask << 7) & you);
+	if(tmp) {
+		if((mask & SW1) && ((mask << 14) & me)) {
+			value |= (mask << 7);
+		} else if((mask & SW2) &&
+				((mask << 14) & you) && ((mask << 21) & me)) {
+			value |= ((mask << 7) | (mask << 14));
+		} else if((mask & SW3) &&
+				((mask << 14) & you) && ((mask << 21) & you) &&
+				((mask << 28) & me)) {
+			value |= ((mask << 7) | (mask << 14) | (mask << 21));
+		} else if((mask & SW4) &&
+				((mask << 14) & you) && ((mask << 21) & you) &&
+				((mask << 28) & you) && ((mask << 35) & me)) {
+			value |= ((mask << 7) | (mask << 14) | (mask << 21) | (mask << 28));
+		} else if((mask & SW5) &&
+				((mask << 14) & you) && ((mask << 21) & you) &&
+				((mask << 28) & you) && ((mask << 35) & you) &&
+				((mask << 42) & me)) {
+			value |= ((mask << 7) | (mask << 14) | (mask << 21) | (mask << 28) | (mask << 35));
+		} else if((mask & SW6) &&
+				((mask << 14) & you) && ((mask << 21) & you) &&
+				((mask << 28) & you) && ((mask << 35) & you) &&
+				((mask << 42) & you) && ((mask << 49) & me)) {
+			value |= ((mask << 7) | (mask << 14) | (mask << 21) | (mask << 28) | (mask << 35) | (mask << 42));
+		}
+	}
+	/* NORTH */
+	tmp = ((mask >> 8) & you);
+	if(tmp) {
+		if((mask & N1) && ((mask >> 16) & me)) {
+			value |= (mask >> 8);
+		} else if((mask & N2) &&
+				((mask >> 16) & you) && ((mask >> 24) & me)) {
+			value |= ((mask >> 8) | (mask >> 16));
+		} else if((mask & N3) &&
+				((mask >> 16) & you) && ((mask >> 24) & you) &&
+				((mask >> 32) & me)) {
+			value |= ((mask >> 8) | (mask >> 16) | (mask >> 24));
+		} else if((mask & N4) &&
+				((mask >> 16) & you) && ((mask >> 24) & you) &&
+				((mask >> 32) & you) && ((mask >> 40) & me)) {
+			value |= ((mask >> 8) | (mask >> 16) | (mask >> 24) | (mask >> 32));
+		} else if((mask & N5) &&
+				((mask >> 16) & you) && ((mask >> 24) & you) &&
+				((mask >> 32) & you) && ((mask >> 40) & you) &&
+				((mask >> 48) & me)) {
+			value |= ((mask >> 8) | (mask >> 16) | (mask >> 24) | (mask >> 32) | (mask >> 40));
+		} else if((mask & N6) &&
+				((mask >> 16) & you) && ((mask >> 24) & you) &&
+				((mask >> 32) & you) && ((mask >> 40) & you) &&
+				((mask >> 48) & you) && ((mask >> 56) & me)) {
+			value |= ((mask >> 8) | (mask >> 16) | (mask >> 24) | (mask >> 32) | (mask >> 40) | (mask >> 48));
+		}
+	}
+	/* NORTHWEST */
+	tmp = ((mask >> 9) & you);
+	if(tmp) {
+		if((mask & NW1) && ((mask >> 18) & me)) {
+			value |= (mask >> 9);
+		} else if((mask & NW2) &&
+				((mask >> 18) & you) && ((mask >> 27) & me)) {
+			value |= ((mask >> 9) | (mask >> 18));
+		} else if((mask & NW3) &&
+				((mask >> 18) & you) && ((mask >> 27) & you) &&
+				((mask >> 36) & me)) {
+			value |= ((mask >> 9) | (mask >> 18) | (mask >> 27));
+		} else if((mask & NW4) &&
+				((mask >> 18) & you) && ((mask >> 27) & you) &&
+				((mask >> 36) & you) && ((mask >> 45) & me)) {
+			value |= ((mask >> 9) | (mask >> 18) | (mask >> 27) | (mask >> 36));
+		} else if((mask & NW5) &&
+				((mask >> 18) & you) && ((mask >> 27) & you) &&
+				((mask >> 36) & you) && ((mask >> 45) & you) &&
+				((mask >> 54) & me)) {
+			value |= ((mask >> 9) | (mask >> 18) | (mask >> 27) | (mask >> 36) | (mask >> 45));
+		} else if((mask & NW6) &&
+				((mask >> 18) & you) && ((mask >> 27) & you) &&
+				((mask >> 36) & you) && ((mask >> 45) & you) &&
+				((mask >> 54) & you) && ((mask >> 63) & me)) {
+			value |= ((mask >> 9) | (mask >> 18) | (mask >> 27) | (mask >> 36) | (mask >> 45) | (mask >> 54));
+		}
+	}
+	/* WEST */
+	tmp = ((mask >> 1) & you);
+	if(tmp) {
+		if((mask & W1) && ((mask >> 2) & me)) {
+			value |= (mask >> 1);
+		} else if((mask & W2) &&
+				((mask >> 2) & you) && ((mask >> 3) & me)) {
+			value |= ((mask >> 1) | (mask >> 2));
+		} else if((mask & W3) &&
+				((mask >> 2) & you) && ((mask >> 3) & you) &&
+				((mask >> 4) & me)) {
+			value |= ((mask >> 1) | (mask >> 2) | (mask >> 3));
+		} else if((mask & W4) &&
+				((mask >> 2) & you) && ((mask >> 3) & you) &&
+				((mask >> 4) & you) && ((mask >> 5) & me)) {
+			value |= ((mask >> 1) | (mask >> 2) | (mask >> 3) | (mask >> 4));
+		} else if((mask & W5) &&
+				((mask >> 2) & you) && ((mask >> 3) & you) &&
+				((mask >> 4) & you) && ((mask >> 5) & you) &&
+				((mask >> 6) & me)) {
+			value |= ((mask >> 1) | (mask >> 2) | (mask >> 3) | (mask >> 4) | (mask >> 5));
+		} else if((mask & W6) &&
+				((mask >> 2) & you) && ((mask >> 3) & you) &&
+				((mask >> 4) & you) && ((mask >> 5) & you) &&
+				((mask >> 6) & you) && ((mask >> 7) & me)) {
+			value |= ((mask >> 1) | (mask >> 2) | (mask >> 3) | (mask >> 4) | (mask >> 5) | (mask >> 6));
+		}
+	}
+	/* NORTHEAST */
+	tmp = ((mask >> 7) & you);
+	if(tmp) {
+		if((mask & NE1) && ((mask >> 14) & me)) {
+			value |= (mask >> 7);
+		} else if((mask & NE2) &&
+				((mask >> 14) & you) && ((mask >> 21) & me)) {
+			value |= ((mask >> 7) | (mask >> 14));
+		} else if((mask & NE3) &&
+				((mask >> 14) & you) && ((mask >> 21) & you) &&
+				((mask >> 28) & me)) {
+			value |= ((mask >> 7) | (mask >> 14) | (mask >> 21));
+		} else if((mask & NE4) &&
+				((mask >> 14) & you) && ((mask >> 21) & you) &&
+				((mask >> 28) & you) && ((mask >> 35) & me)) {
+			value |= ((mask >> 7) | (mask >> 14) | (mask >> 21) | (mask >> 28));
+		} else if((mask & NE5) &&
+				((mask >> 14) & you) && ((mask >> 21) & you) &&
+				((mask >> 28) & you) && ((mask >> 35) & you) &&
+				((mask >> 42) & me)) {
+			value |= ((mask >> 7) | (mask >> 14) | (mask >> 21) | (mask >> 28) | (mask >> 35));
+		} else if((mask & NE6) &&
+				((mask >> 14) & you) && ((mask >> 21) & you) &&
+				((mask >> 28) & you) && ((mask >> 35) & you) &&
+				((mask >> 42) & you) && ((mask >> 49) & me)) {
+			value |= ((mask >> 7) | (mask >> 14) | (mask >> 21) | (mask >> 28) | (mask >> 35) | (mask >> 42));
+		}
+	}
+	return (value);
+}
