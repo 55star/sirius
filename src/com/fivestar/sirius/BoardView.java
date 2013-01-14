@@ -7,18 +7,15 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class BoardView extends Activity {
-	
-//	public static native void doMove(int move);
 	
 	final static String TAG = "BoardView.java";
 	GridView mGridView;
 	BoardAdapter mBoardAdapter;
 	SiriusApp app;
-		
+	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -54,9 +51,9 @@ public class BoardView extends Activity {
 				Utils.log(TAG, "Check legal/do move position: " + position);
 
 				
-//				app.boardLogic.legal_moves(app.board, 0);
-				app.boardLogic.legalMoves(app.board,0);
-				if(app.boardLogic.legal(app.board, position)) {
+				app.board.legalMoves(0);
+				if(app.board.legal(position)) {
+					Utils.log(TAG,"do jni move");
 					app.board.doMove(position);
 					mBoardAdapter.notifyDataSetChanged();
 				} else {
@@ -67,8 +64,8 @@ public class BoardView extends Activity {
 				} else {
 					mStatusText.setText("White's turn to play");
 				}
-				mStatText.setText("Black "+app.boardLogic.numbits(app.board.black)
-									+" - "+ app.boardLogic.numbits(app.board.white) + " White");
+				mStatText.setText("Black "+app.board.numbits(app.board.black)
+									+" - "+ app.board.numbits(app.board.white) + " White");
 //				app.boardLogic.dumpToConsole(app.board);
 			}
 		});

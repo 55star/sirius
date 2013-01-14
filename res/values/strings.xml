@@ -4,5 +4,12 @@
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">Sirius</string>
+    <string name="intro_text">Sirius is a program for playing the game of othello. The program includes an AI (Artificial In\
+telligence) opponent which plays at a very challenging level and is actually quite hard to beat. The AI opponent\'s strength can therefore be adjusted in several ways t\
+o give you a suitable opponent.<br /><br />The AI opponent uses a plain alpha-beta search with hashing to figure out which move to make. To be able to tell a god position from\
+ a bad one, it uses a pattern based evaluation function. The pattern used is the 9 discs surrounding each corner and the 8 discs creating the edge of the board. The evalua\
+tion function also takes mobility, potential mobility and parity into count. For the initial 9 moves the AI opponent optionally uses a simple opening book. During midgame \
+it searches and evaluates about 200.000 nodes per second on a PIII 750 MHz, in the endgame this number is significantly higher due to more transpositions and a less expens\
+ive evaluation function.</string>
 
 </resources>

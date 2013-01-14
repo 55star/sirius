@@ -44,7 +44,7 @@ public class BoardAdapter extends BaseAdapter {
         }
 
 //        BoardLogic mBoardLogic = new BoardLogic();
-        switch(app.boardLogic.pos(app.board, position + 1)) {
+        switch(app.board.pos(position + 1)) {
         case Constant.BLACK :
             imageView.setImageResource(R.drawable.brick_black);
             break;

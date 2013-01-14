@@ -17,7 +17,6 @@
 
 #include "com_fivestar_sirius_Board.h"
 
-
 #define BLACK 1
 #define WHITE 0
 #define EMPTY 2
@@ -83,36 +82,47 @@
 static u64 calculate_flips(u64 m, u64 y, u64 mask);
 
 
-JNIEXPORT void JNICALL Java_com_fivestar_sirius_BoardLogic_doMove(JNIEnv *env, jclass this, jint move){
 
-	// Get a reference to this object's class
+JNIEXPORT void JNICALL Java_com_fivestar_sirius_Board_doMove(JNIEnv *env, jobject obj, jint move) {
+	u64 black;
+	u64 white;
 
-	jclass thisClass = (*env)->GetObjectClass(env, this);
-
-	jfieldID fidColorToMove = (*env)->GetFieldID(env, thisClass, "colorToMove", "I");
-	jint colorToMove = (*env)->GetIntField(env, this, fidColorToMove);
-
-	jfieldID fidBlack = (*env)->GetFieldID(env, thisClass, "black", "L");
-	jlong black = (*env)->GetIntField(env, this, fidBlack);
-
-	jfieldID fidWhite = (*env)->GetFieldID(env, thisClass, "black", "L");
-	jlong white = (*env)->GetIntField(env, this, fidWhite);
-
-	jfieldID fidHalfMove = (*env)->GetFieldID(env, thisClass, "halfMove", "I");
-	jint halfMove = (*env)->GetIntField(env, this, fidHalfMove);
-
-	jfieldID fidPass = (*env)->GetFieldID(env, thisClass, "pass", "I");
-	jint pass = (*env)->GetIntField(env, this, fidPass);
-
-
-	// Change the variable
-	//	      number = 99;
-	//      (*env)->SetIntField(env, this, fidNumber, number);
-
-
-	long mask = 1;
+	long mask;
 	long flips;
 
+	int colorToMove;
+	int halfMove;
+	int pass;
+
+	// Get a reference to this object's class
+	jclass board = (*env)->FindClass(env, "com.fivestar.sirius.Board");
+
+	// ColorToMove
+	jfieldID fidColorToMove = (*env)->GetFieldID(env, board, "colorToMove", "I");
+	jint ColorToMove = (*env)->GetIntField(env, board, fidColorToMove);
+	colorToMove = ColorToMove;
+
+	// black
+	jfieldID fidblack = (*env)->GetFieldID(env, board, "black", "L");
+	jlong Black = (*env)->GetLongField(env, board, fidblack);
+	black = Black;
+
+	// white
+	jfieldID fidwhite = (*env)->GetFieldID(env, board, "white", "L");
+	jlong White = (*env)->GetLongField(env, board, fidwhite);
+	white = White;
+
+	// halfMove
+	jfieldID fidhalfMove = (*env)->GetFieldID(env, board, "halfMove", "I");
+	jint HalfMove = (*env)->GetIntField(env, board, fidhalfMove);
+	halfMove = HalfMove;
+
+	// pass
+	jfieldID fidpass = (*env)->GetFieldID(env, board, "pass", "I");
+	jint Pass = (*env)->GetIntField(env, board, fidpass);
+	pass = Pass;
+
+	mask = 1;
 	mask = mask << (move-1);
 	if(colorToMove == BLACK) {
 		flips = calculate_flips(black, white, mask);
@@ -128,12 +138,13 @@ JNIEXPORT void JNICALL Java_com_fivestar_sirius_BoardLogic_doMove(JNIEnv *env, j
 	halfMove++;
 	pass = 0;
 
-	(*env)->SetLongField(env, this, fidWhite, white);
-	(*env)->SetLongField(env, this, fidBlack, black);
-	(*env)->SetIntField(env, this, fidColorToMove, colorToMove);
-	(*env)->SetIntField(env, this, fidHalfMove, halfMove);
-	(*env)->SetIntField(env, this, fidPass, pass);
+	(*env)->SetLongField(env, board, fidwhite, white);
+	(*env)->SetLongField(env, board, fidblack, black);
+	(*env)->SetIntField(env, board, fidColorToMove, colorToMove);
+	(*env)->SetIntField(env, board, fidhalfMove, halfMove);
+	(*env)->SetIntField(env, board, fidpass, pass);
 }
+
 
 /*
 static u64 calculate_legal(u64 m, u64 y) {

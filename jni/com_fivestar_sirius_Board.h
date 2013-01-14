@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_com_fivestar_sirius_Board_doMove
-  (JNIEnv *, jclass, jint);
+  (JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }

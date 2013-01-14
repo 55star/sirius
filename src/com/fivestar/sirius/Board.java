@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 
 public class Board {
-	
+
 	final static String TAG = "Board.java";
-	
+
 	public long black;
 	public long white;
 	public int colorToMove;
@@ -15,7 +15,7 @@ public class Board {
 	public int halfMove;
 	public int pass;
 	public int gameOver;
-	
+
 	final static int[] movePriority = {
 		55,50,15,10,
 		16,56,63,58,49,9,7,2,
@@ -27,19 +27,22 @@ public class Board {
 		62,59,48,41,24,17,6,3,
 		64,57,8,1
 	};
-	
-	//	public static native long calculateLegal(long me, long you);
-	//	public static native long calculateFlips(long me, long you, long mask);
-	public static native void doMove(int move);
+
 	
 	static {
+		Utils.log(TAG,"Start loadlib board");
 		System.loadLibrary("board");
+		Utils.log(TAG,"Done loadlib board");
 	}
 
-	public Board() {
-		// Black always start 
-	}
 	
+	public native void doMove(int move);
+	
+
+	public Board() {
+		initBoard();
+	}
+
 	public void initBoard() {
 		long mask = 1;
 
@@ -149,43 +152,43 @@ public class Board {
 			}
 		}
 	}
-	
-//	public void mobility(Board b) {
-//		long legal;
-//
-//		if(b.color_to_move) {
-//			legal = calculate_legal(b.black,b.white);
-//		} else {
-//			legal = calculate_legal(b.white,b.black);
-//		}	
-//		b->num_legal_moves = numbits(legal);
-//	}
-//
-//
-//	public int get_mobility_from_move(Board b, int move) {
-//		long mask = 1;
-//		long flips;
-//		long bl,wh;
-//
-//		bl = b.black;
-//		wh = b.white;
-//
-//		mask = mask << (move-1);
-//		if(b.color_to_move > 0) {
-//			flips = b.calculate_flips(bl, wh, mask);
-//			bl |= flips;
-//			wh &= ~flips;
-//			return (numbits(calculate_legal(bl, wh)));
-//		} else {
-//			flips = calculate_flips(wh, bl, mask);
-//			wh |= flips;
-//			bl &= ~flips;
-//			return (numbits(calculate_legal(wh,bl)));
-//		}
-//
-//		return (0);
-//	}
-	
+
+	//	public void mobility(Board b) {
+	//		long legal;
+	//
+	//		if(b.color_to_move) {
+	//			legal = calculate_legal(b.black,b.white);
+	//		} else {
+	//			legal = calculate_legal(b.white,b.black);
+	//		}	
+	//		b->num_legal_moves = numbits(legal);
+	//	}
+	//
+	//
+	//	public int get_mobility_from_move(Board b, int move) {
+	//		long mask = 1;
+	//		long flips;
+	//		long bl,wh;
+	//
+	//		bl = b.black;
+	//		wh = b.white;
+	//
+	//		mask = mask << (move-1);
+	//		if(b.color_to_move > 0) {
+	//			flips = b.calculate_flips(bl, wh, mask);
+	//			bl |= flips;
+	//			wh &= ~flips;
+	//			return (numbits(calculate_legal(bl, wh)));
+	//		} else {
+	//			flips = calculate_flips(wh, bl, mask);
+	//			wh |= flips;
+	//			bl &= ~flips;
+	//			return (numbits(calculate_legal(wh,bl)));
+	//		}
+	//
+	//		return (0);
+	//	}
+
 	public int pos(int move) {
 		long mask = 1;
 
@@ -199,7 +202,7 @@ public class Board {
 			}
 		}
 	}
-	
+
 	public void dumpToConsole(Board b) {
 		int svart = 0;
 		int vit = 0;
@@ -227,7 +230,7 @@ public class Board {
 		}
 		Utils.log(TAG,"         " + svart + " - " + vit);
 	}
-	
+
 	public boolean l2B(long value) {
 		return (value != 0);
 	}
@@ -253,7 +256,7 @@ public class Board {
 		}
 		return false;
 	}
-	
+
 	public void doPass() {
 
 		if(colorToMove == Constant.BLACK) {
@@ -263,7 +266,7 @@ public class Board {
 		}
 		pass = 1;
 	}
-	
+
 	public long calculateLegal(long me, long you) {
 		long free  = ~(me | you);
 		long value;
