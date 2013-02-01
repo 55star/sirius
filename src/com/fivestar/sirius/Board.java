@@ -29,14 +29,14 @@ public class Board {
 	};
 
 	
-	static {
+	{
 		Utils.log(TAG,"Start loadlib board");
 		System.loadLibrary("board");
 		Utils.log(TAG,"Done loadlib board");
 	}
 
 	
-	public native void doMove(int move);
+	static public native void doMove(int move);
 	
 
 	public Board() {

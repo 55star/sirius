@@ -15,6 +15,9 @@
  *
  */
 
+#include <jni.h>
+#include <stdio.h>
+#include <android/log.h>
 #include "com_fivestar_sirius_Board.h"
 
 #define BLACK 1
@@ -82,44 +85,63 @@
 static u64 calculate_flips(u64 m, u64 y, u64 mask);
 
 
-
-JNIEXPORT void JNICALL Java_com_fivestar_sirius_Board_doMove(JNIEnv *env, jobject obj, jint move) {
+JNIEXPORT void JNICALL
+Java_com_fivestar_sirius_Board_doMove(JNIEnv *env, jobject obj, jint move) {
 	u64 black;
 	u64 white;
 
 	long mask;
 	long flips;
 
-	int colorToMove;
+	jint colorToMove;
 	int halfMove;
 	int pass;
 
+
 	// Get a reference to this object's class
-	jclass board = (*env)->FindClass(env, "com.fivestar.sirius.Board");
+	//	jclass clazz = (*env)->FindClass(env, "com/fivestar/sirius/Board");
+	jclass clazz =(*env)->GetObjectClass(env, obj);
+	if(clazz == '\0') {
+		__android_log_print(ANDROID_LOG_WARN, "INSIDE JNI", "jclass clazz == NULL");
+		return;
+	}
+	__android_log_print(ANDROID_LOG_WARN, "INSIDE JNI", "jclass clazz != NULL");
+
+	/* we are here!
+	 *
+	 * JNI WARNING: instance fieldID 0x44df04fc not valid for class Ljava/lang/Class
+	 */
 
 	// ColorToMove
-	jfieldID fidColorToMove = (*env)->GetFieldID(env, board, "colorToMove", "I");
-	jint ColorToMove = (*env)->GetIntField(env, board, fidColorToMove);
-	colorToMove = ColorToMove;
+	jfieldID fidColorToMove = (*env)->GetFieldID(env, clazz, "colorToMove", "I");
+	if(fidColorToMove) {
+		jint ColorToMove = (*env)->GetIntField(env, clazz, fidColorToMove);
+		colorToMove = ColorToMove;
+	} else {
+		__android_log_print(ANDROID_LOG_WARN, "INSIDE JNI", "fidColorToMove == NULL");
+		return;
+	}
+
+	__android_log_print(ANDROID_LOG_WARN, "INSIDE JNI", "colorToMove: %d!",colorToMove);
 
 	// black
-	jfieldID fidblack = (*env)->GetFieldID(env, board, "black", "L");
-	jlong Black = (*env)->GetLongField(env, board, fidblack);
+	jfieldID fidblack = (*env)->GetFieldID(env, clazz, "black", "L");
+	jlong Black = (*env)->GetLongField(env, clazz, fidblack);
 	black = Black;
 
 	// white
-	jfieldID fidwhite = (*env)->GetFieldID(env, board, "white", "L");
-	jlong White = (*env)->GetLongField(env, board, fidwhite);
+	jfieldID fidwhite = (*env)->GetFieldID(env, clazz, "white", "L");
+	jlong White = (*env)->GetLongField(env, clazz, fidwhite);
 	white = White;
 
 	// halfMove
-	jfieldID fidhalfMove = (*env)->GetFieldID(env, board, "halfMove", "I");
-	jint HalfMove = (*env)->GetIntField(env, board, fidhalfMove);
+	jfieldID fidhalfMove = (*env)->GetFieldID(env, clazz, "halfMove", "I");
+	jint HalfMove = (*env)->GetIntField(env, clazz, fidhalfMove);
 	halfMove = HalfMove;
 
 	// pass
-	jfieldID fidpass = (*env)->GetFieldID(env, board, "pass", "I");
-	jint Pass = (*env)->GetIntField(env, board, fidpass);
+	jfieldID fidpass = (*env)->GetFieldID(env, clazz, "pass", "I");
+	jint Pass = (*env)->GetIntField(env, clazz, fidpass);
 	pass = Pass;
 
 	mask = 1;
@@ -138,88 +160,15 @@ JNIEXPORT void JNICALL Java_com_fivestar_sirius_Board_doMove(JNIEnv *env, jobjec
 	halfMove++;
 	pass = 0;
 
-	(*env)->SetLongField(env, board, fidwhite, white);
-	(*env)->SetLongField(env, board, fidblack, black);
-	(*env)->SetIntField(env, board, fidColorToMove, colorToMove);
-	(*env)->SetIntField(env, board, fidhalfMove, halfMove);
-	(*env)->SetIntField(env, board, fidpass, pass);
+	(*env)->SetLongField(env, clazz, fidwhite, white);
+	(*env)->SetLongField(env, clazz, fidblack, black);
+	(*env)->SetIntField(env, clazz, fidColorToMove, colorToMove);
+	(*env)->SetIntField(env, clazz, fidhalfMove, halfMove);
+	(*env)->SetIntField(env, clazz, fidpass, pass);
 }
 
 
-/*
-static u64 calculate_legal(u64 m, u64 y) {
 
-	u64 me = (u64) m;
-	u64 you = (u64) y;
-
-	u64 free;
-	u64 value;
-
-	free = ~(me | you);
-
-	value =  (free &
-			((N1  & (you << 8) & (me << 16))  |
-					(NW1 & (you << 9) & (me << 18))  |
-					(W1  & (you << 1) & (me << 2))   |
-					(SW1 & (you >> 7) & (me >> 14))  |
-					(S1  & (you >> 8) & (me >> 16))  |
-					(SE1 & (you >> 9) & (me >> 18))  |
-					(E1  & (you >> 1) & (me >> 2))   |
-					(NE1 & (you << 7) & (me << 14))));
-
-	value |= (free &
-			((N2   & (you << 8) & (you << 16) & (me << 24))  |
-					(NW2  & (you << 9) & (you << 18) & (me << 27))  |
-					(W2   & (you << 1) & (you << 2)  & (me << 3))   |
-					(SW2  & (you >> 7) & (you >> 14) & (me >> 21))  |
-					(S2   & (you >> 8) & (you >> 16) & (me >> 24))  |
-					(SE2  & (you >> 9) & (you >> 18) & (me >> 27))  |
-					(E2   & (you >> 1) & (you >> 2)  & (me >> 3))   |
-					(NE2  & (you << 7) & (you << 14) & (me << 21))));
-
-	value |= (free &
-			((N3   & (you << 8) & (you << 16) & (you << 24) & (me << 32))  |
-					(NW3  & (you << 9) & (you << 18) & (you << 27) & (me << 36))  |
-					(W3   & (you << 1) & (you << 2)  & (you << 3)  & (me << 4))   |
-					(SW3  & (you >> 7) & (you >> 14) & (you >> 21) & (me >> 28))  |
-					(S3   & (you >> 8) & (you >> 16) & (you >> 24) & (me >> 32))  |
-					(SE3  & (you >> 9) & (you >> 18) & (you >> 27) & (me >> 36))  |
-					(E3   & (you >> 1) & (you >> 2)  & (you >> 3)  & (me >> 4))   |
-					(NE3  & (you << 7) & (you << 14) & (you << 21) & (me << 28))));
-
-	value |= (free &
-			((N4   & (you << 8) & (you << 16) & (you << 24) & (you << 32) & (me << 40))  |
-					(NW4  & (you << 9) & (you << 18) & (you << 27) & (you << 36) & (me << 45))  |
-					(W4   & (you << 1) & (you << 2)  & (you << 3)  & (you << 4)  & (me << 5))   |
-					(SW4  & (you >> 7) & (you >> 14) & (you >> 21) & (you >> 28) & (me >> 35))  |
-					(S4   & (you >> 8) & (you >> 16) & (you >> 24) & (you >> 32) & (me >> 40))  |
-					(SE4  & (you >> 9) & (you >> 18) & (you >> 27) & (you >> 36) & (me >> 45))  |
-					(E4   & (you >> 1) & (you >> 2)  & (you >> 3)  & (you >> 4)  & (me >> 5))   |
-					(NE4  & (you << 7) & (you << 14) & (you << 21) & (you << 28) & (me << 35))));
-
-	value |= (free &
-			((N5   & (you << 8) & (you << 16) & (you << 24) & (you << 32) & (you << 40) & (me << 48))  |
-					(NW5  & (you << 9) & (you << 18) & (you << 27) & (you << 36) & (you << 45) & (me << 54))  |
-					(W5   & (you << 1) & (you << 2)  & (you << 3)  & (you << 4)  & (you << 5)  & (me << 6))   |
-					(SW5  & (you >> 7) & (you >> 14) & (you >> 21) & (you >> 28) & (you >> 35) & (me >> 42))  |
-					(S5   & (you >> 8) & (you >> 16) & (you >> 24) & (you >> 32) & (you >> 40) & (me >> 48))  |
-					(SE5  & (you >> 9) & (you >> 18) & (you >> 27) & (you >> 36) & (you >> 45) & (me >> 54))  |
-					(E5   & (you >> 1) & (you >> 2)  & (you >> 3)  & (you >> 4)  & (you >> 5)  & (me >> 6))   |
-					(NE5  & (you << 7) & (you << 14) & (you << 21) & (you << 28) & (you << 35) & (me << 42))));
-
-	value |= (free &
-			((N6   & (you << 8) & (you << 16) & (you << 24) & (you << 32) & (you << 40) & (you << 48) & (me << 56))  |
-					(NW6  & (you << 9) & (you << 18) & (you << 27) & (you << 36) & (you << 45) & (you << 54) & (me << 63))  |
-					(W6   & (you << 1) & (you << 2)  & (you << 3)  & (you << 4)  & (you << 5)  & (you << 6)  & (me << 7))   |
-					(SW6  & (you >> 7) & (you >> 14) & (you >> 21) & (you >> 28) & (you >> 35) & (you >> 42) & (me >> 49))  |
-					(S6   & (you >> 8) & (you >> 16) & (you >> 24) & (you >> 32) & (you >> 40) & (you >> 48) & (me >> 56))  |
-					(SE6  & (you >> 9) & (you >> 18) & (you >> 27) & (you >> 36) & (you >> 45) & (you >> 54) & (me >> 63))  |
-					(E6   & (you >> 1) & (you >> 2)  & (you >> 3)  & (you >> 4)  & (you >> 5)  & (you >> 6)  & (me >> 7))   |
-					(NE6  & (you << 7) & (you << 14) & (you << 21) & (you << 28) & (you << 35) & (you << 42) & (me << 49))));
-
-	return (value);
-}
- */
 
 static u64 calculate_flips(u64 m, u64 y, u64 mask) {
 
